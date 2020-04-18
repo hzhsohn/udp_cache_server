@@ -111,10 +111,11 @@
     <ClCompile Include="lib\zhNet_Core\platform.c" />
     <ClCompile Include="lib\zhNet_Core\session.c" />
     <ClCompile Include="lib\zhNet_Core\socket.c" />
-    <ClCompile Include="main.c" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="src\assist_func.c" />
     <ClCompile Include="src\ck_assist.c" />
-    <ClCompile Include="src\proc.c" />
+    <ClCompile Include="src\mian_proc.cpp" />
+    <ClCompile Include="src\udp_magr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lib\json\cJSON.h" />
@@ -134,7 +135,9 @@
     <ClInclude Include="lib\zhNet_Core\socket.h" />
     <ClInclude Include="src\assist_func.h" />
     <ClInclude Include="src\ck_assist.h" />
-    <ClInclude Include="src\proc.h" />
+    <ClInclude Include="src\main_proc.h" />
+    <ClInclude Include="src\udp_magr.h" />
+    <ClInclude Include="src\udp_magr_delegate.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

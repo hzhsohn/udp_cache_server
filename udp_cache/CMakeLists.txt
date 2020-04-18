@@ -30,7 +30,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 message(^^^^^^  添加要编译的可执行文件  ^^^^^^^)
 ADD_EXECUTABLE(${PROJECT_NAME} 
-	main.c
+	main.cpp
 )
 
 #编译选项

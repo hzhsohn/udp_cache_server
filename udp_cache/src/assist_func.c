@@ -1,6 +1,5 @@
 #include "assist_func.h"
 #include "platform.h"
-#include "ck_define.h"
 
 #ifdef _WIN32
   #define localtime_r(a,b) localtime_s(b,a)

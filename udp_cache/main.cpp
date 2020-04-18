@@ -1,9 +1,11 @@
-#include "src/proc.h"
+#include "src/main_proc.h"
 #include "print_msg.h"
 
 /*-----------------------------
 
 ------------------------------ */
+MainPROC g_main;
+
 int main(int argc,char *argv[])
 {
 	int i=0;
@@ -11,10 +13,10 @@ int main(int argc,char *argv[])
 	PrintMsgInit();
 
 	//开始程序
-	if(InitProc(argc,argv))
+	if(g_main.InitProc(argc,argv))
 	{
-		while(RunProc());
+		while(g_main.RunProc());
 	}
-	EndProc();
+	g_main.EndProc();
 	return 0;
 }

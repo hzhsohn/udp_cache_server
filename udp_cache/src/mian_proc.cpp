@@ -1,23 +1,18 @@
-#include "proc.h"
-#include "resolv_cfg.h"
-#include "net_logic.h"
+#include "main_proc.h"
+#include "print_msg.h"
 #include "ck_assist.h"
-#include "service_logic.h"
 #include "json/cJSON.h"
-#include "ck_define.h"
-#include "templ-collect.config.h"
+#include "udp_magr.h"
 
-TckSourceCfg g_source;
-
-char g_szPathBuf[512]={0};
-
-bool InitProc(int argc,char *argv[])
+bool MainPROC::InitProc(int argc,char *argv[])
 {
 	int isSetWorkPath=0;
 	int iParam=0;
+
 	//--------------------------------------------------------------------------
 	PrintDebugMsgEnable(true);
 	//--------------------------------------------------------------------------
+
 	//获取是否为项目调试模式的参数
 	for (iParam=0; iParam < argc; iParam++)
 	{
@@ -36,30 +31,28 @@ bool InitProc(int argc,char *argv[])
 		}
 	}
 
-	//装载当前路径的配置文件
-	if(0==isSetWorkPath)
-	{
-		getCurrentPath(ZH_SOURCE_NET_XML,g_szPathBuf,sizeof(g_szPathBuf));
-	}
+	//初始化
+	_udpMagr.setdelegate.set_recv_cb(this,&MainPROC::udp_recvf);
+	_udpMagr.init(6699);
 
-	memset(&g_source,0,sizeof(TckSourceCfg));
-	if(readSrcConfig(&g_source,g_szPathBuf))
-	{
-		SYS_PRINTF("Load \"%s\" fail!",g_szPathBuf);
-		return false;
-	}
-
-	SYS_PRINTF("Load successfully \"%s\"",g_szPathBuf);
-
+	SYS_PRINTF("Load successfully");
 	return true;
 }
 
-bool RunProc()
+bool MainPROC::RunProc()
 {
 	zhPlatSleep(1);
 	return true;
 }
 
-void EndProc()
+void MainPROC::EndProc()
 {
+
+}
+
+//--------------------------------------------------
+void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
+{
+	DEBUG_PRINTF("udp_recvf ip=%s, port=%d,int len=%d)",ip,port,len);
+
 }

@@ -33,9 +33,6 @@
     <ClCompile Include="src\ck_assist.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\proc.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\assist_func.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -75,15 +72,18 @@
     <ClCompile Include="lib\print_msg\print_msg.c">
       <Filter>lib\print_msg</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\udp_magr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mian_proc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ck_assist.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\proc.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\assist_func.h">
@@ -133,6 +133,15 @@
     </ClInclude>
     <ClInclude Include="lib\print_msg\print_msg.h">
       <Filter>lib\print_msg</Filter>
+    </ClInclude>
+    <ClInclude Include="src\udp_magr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\udp_magr_delegate.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\main_proc.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
