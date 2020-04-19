@@ -62,15 +62,17 @@ int UDP_MAGR::blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_
 void UDP_MAGR::udpThread(UDP_MAGR*p)
 {
 	int ret;
-	char recvbuf[2000]={0};
+	char* recvbuf;
 	struct sockaddr_in addr;
 	int addrlen=sizeof(struct sockaddr_in);	
 	char ip[20]={0};
 	unsigned short port;
+	recvbuf=(char*)malloc(10240);
+	memset(recvbuf,0,10240);
 
 	while(p->isRuning)
 	{
-		ret=p->blockingRecvfrom(p->_udpSocket,recvbuf,sizeof(recvbuf),&addr,&addrlen);
+		ret=p->blockingRecvfrom(p->_udpSocket,recvbuf,10238,&addr,&addrlen);
 		if(ret>0)
 		{
 			zhSockAddrToPram(&addr,ip,&port);
@@ -78,4 +80,14 @@ void UDP_MAGR::udpThread(UDP_MAGR*p)
 			p->setdelegate.callback_recv_cb(ip,port,recvbuf,ret);
 		}
 	}
+
+	free(recvbuf);
+	recvbuf=NULL;
+}
+
+int UDP_MAGR::sendto(char* ipv4, int port ,char* buf,int len)
+{
+	struct sockaddr_in addr={0};
+	zhSockPramToAddr(ipv4,port,&addr);
+	return zhSockSendTo(_udpSocket,buf,len,&addr);
 }

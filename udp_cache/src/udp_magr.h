@@ -23,7 +23,8 @@ public:
 
 	int blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_in *addr ,int *addrlen);
 	static void udpThread(UDP_MAGR*p);
-	
+
+	int sendto(char* ipv4, int port ,char* buf,int len);
 };
 
 #define _ZH_PROCESS_UDP_PROC_H_
