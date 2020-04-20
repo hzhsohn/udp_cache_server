@@ -81,6 +81,9 @@
     <ClCompile Include="src\mian_proc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\assist_func2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ck_assist.h">
@@ -141,6 +144,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\main_proc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\assist_func2.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
