@@ -3,6 +3,9 @@
 #include "ck_assist.h"
 #include "json/cJSON.h"
 #include "udp_magr.h"
+#include "assist_func2.h"
+
+
 
 //数据转发源最大链表的接收数量,10万条记录,约占内存190M
 #define MAX_LIST_USRC_DATA_COUNT			100000
@@ -10,6 +13,8 @@
 #define MAX_LIST_UDST_DATA_COUNT			10000
 //超时多少秒没激活就被移除接源
 #define MAX_USER_ACTIVE_TIMEOUT				30000
+
+
 
 bool MainPROC::InitProc(int argc,char *argv[])
 {
@@ -112,17 +117,25 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 						{
 									if(lstUDstData.size() < MAX_LIST_UDST_DATA_COUNT)
 									{
+												vector<string> strAry;
+												vector<string>::iterator itStr;
+												stringSplit(data+6,"/",strAry);
+												//
 												LOCK_CS(&csUDstData);
 												//判断记录是否已经存在
-												for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
+												for(itStr=strAry.begin();itStr!=strAry.end(); itStr++)
 												{
+														for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
+														{
 															//判断是否已经订阅此消息
-															if(0==strcmp(itUDst->flag_string,"all") || 
-																0==strcmp(itUDst->flag_string,itUSrc->flag_string))
+															if( itUDst->port==port &&
+																0==strcmp(itUDst->ipv4,ip) &&
+																0==strcmp(itUDst->flag_string,""))
 															{
 																	itUDst->activeTime=zhPlatGetTime();
 																	break;
 															}
+														}
 												}
 
 												//新增将数据到达的位置信息
@@ -162,7 +175,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 									}
 									else
 									{
-											DEBUG_PRINTF("protocol \"DATA:\" format error");
+											DEBUG_PRINTF("protocol \"DATA,\" format error");
 									}
 							}
 					}

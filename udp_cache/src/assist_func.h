@@ -27,8 +27,6 @@ time_t trStrToShortTime(char*szTime);
 //获取星期几  0星期日 1-6星期一到六
 char getWeekDay();
 
-char trStrToBool(const char *szValue);
-char* trBoolToStr(char c);
 
 #ifdef __cplusplus
 }

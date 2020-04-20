@@ -150,21 +150,3 @@ char getWeekDay()
 	localtime_r(&tme,&ptm);
 	return ptm.tm_wday;
 }
-
-char trStrToBool(const char *szValue)
-{
-	if(!strcmpi(szValue,"0"))
-	{	return 0;}
-	else if(!strcmpi(szValue,"1"))
-	{	return 1;}
-	else if(!strcmpi(szValue,"false"))
-	{	return 0;}
-	else if(!strcmpi(szValue,"true"))
-	{	return 1;}
-	else
-	{	return 0;}
-}
-char* trBoolToStr(char c)
-{
-	 return c?"true":"false";
-}
