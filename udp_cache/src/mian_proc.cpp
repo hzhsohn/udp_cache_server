@@ -22,10 +22,6 @@ bool MainPROC::InitProc(int argc,char *argv[])
 	int isSetWorkPath=0;
 	int iParam=0;
 
-	//--------------------------------------------------------------------------
-	PrintDebugMsgEnable(true);
-	//--------------------------------------------------------------------------
-
 	//获取是否为项目调试模式的参数
 	for (iParam=0; iParam < argc; iParam++)
 	{
@@ -41,6 +37,11 @@ bool MainPROC::InitProc(int argc,char *argv[])
 			printf("\r\n");
 
 			exit(0);
+		}
+		else if(0==strcmp(argv[iParam],"-debug"))
+		{
+			//打开调试信息
+			PrintDebugMsgEnable(true);
 		}
 	}
 
