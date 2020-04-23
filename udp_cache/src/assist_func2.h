@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <vector>
+#include <string>
 using namespace std;
 
-//sÎª´ı·Ö¸î´®£¬°´ÕÕdelimÖĞµÄ¸÷ÖÖ×Ö·û·Ö¸î£¬½á¹û±£´æÔÚansÖĞ
+//sä¸ºå¾…åˆ†å‰²ä¸²ï¼ŒæŒ‰ç…§delimä¸­çš„å„ç§å­—ç¬¦åˆ†å‰²ï¼Œç»“æœä¿å­˜åœ¨ansä¸­
 void stringSplit(string s,string delim,vector<string> &ans);
 
 #define _CK_LIB_ASSIST2_FUNCTION_

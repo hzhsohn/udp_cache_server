@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "session.h"
 #include "udp_magr_delegate.h"
+#include "micro.h"
 
 class MainPROC;
 class UDP_MAGR

@@ -8,11 +8,11 @@
 
 
 
-//Êı¾İ×ª·¢Ô´×î´óÁ´±íµÄ½ÓÊÕÊıÁ¿,10ÍòÌõ¼ÇÂ¼,Ô¼Õ¼ÄÚ´æ190M
+//æ•°æ®è½¬å‘æºæœ€å¤§é“¾è¡¨çš„æ¥æ”¶æ•°é‡,10ä¸‡æ¡è®°å½•,çº¦å å†…å­˜190M
 #define MAX_LIST_USRC_DATA_COUNT			100000
-//Êı¾İ½ÓÊÕÔ´×î´óÁ´±íµÄ½ÓÊÕÊıÁ¿,1ÍòÌõ¼ÇÂ¼
+//æ•°æ®æ¥æ”¶æºæœ€å¤§é“¾è¡¨çš„æ¥æ”¶æ•°é‡,1ä¸‡æ¡è®°å½•
 #define MAX_LIST_UDST_DATA_COUNT			10000
-//³¬Ê±¶àÉÙÃëÃ»¼¤»î¾Í±»ÒÆ³ı½ÓÔ´
+//è¶…æ—¶å¤šå°‘ç§’æ²¡æ¿€æ´»å°±è¢«ç§»é™¤æ¥æº
 #define MAX_USER_ACTIVE_TIMEOUT				30000
 
 
@@ -21,8 +21,9 @@ bool MainPROC::InitProc(int argc,char *argv[])
 {
 	int isSetWorkPath=0;
 	int iParam=0;
+	int nBindPort=6699;
 
-	//»ñÈ¡ÊÇ·ñÎªÏîÄ¿µ÷ÊÔÄ£Ê½µÄ²ÎÊı
+	//è·å–æ˜¯å¦ä¸ºé¡¹ç›®è°ƒè¯•æ¨¡å¼çš„å‚æ•°
 	for (iParam=0; iParam < argc; iParam++)
 	{
         printf("Argument %d is %s\n", iParam, argv[iParam]);
@@ -40,16 +41,35 @@ bool MainPROC::InitProc(int argc,char *argv[])
 		}
 		else if(0==strcmp(argv[iParam],"-debug"))
 		{
-			//´ò¿ªµ÷ÊÔĞÅÏ¢
+			//æ‰“å¼€è°ƒè¯•ä¿¡æ¯
 			PrintDebugMsgEnable(true);
+		}
+		else if(0==strcmp(argv[iParam],"-port"))
+		{
+			if(iParam<argc-1)
+			{
+				int np=atoi(argv[iParam+1]);
+				if(np>0)
+				{
+					nBindPort=np;
+				}
+                else
+                {
+                   SYS_PRINTF("parameter -port error value=%s",argv[iParam+1]);
+                }
+			}
+			else
+			{
+                SYS_PRINTF("parameter -port no value");
+            }
 		}
 	}
 
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	INIT_CS(&csTrans);
 	INIT_CS(&csUDstData);
 	_udpMagr.setdelegate.set_recv_cb(this,&MainPROC::udp_recvf);
-	if(_udpMagr.init(6699))
+	if(_udpMagr.init(nBindPort))
 	{
 		SYS_PRINTF("Load successfully");
 	}
@@ -63,7 +83,7 @@ bool MainPROC::InitProc(int argc,char *argv[])
 bool MainPROC::RunProc()
 {
 	zhPlatSleep(1);
-	//´¦Àí¹ıÆÚµÄÄ¿±êÔ´
+	//å¤„ç†è¿‡æœŸçš„ç›®æ ‡æº
 	LOCK_CS(&csUDstData);
 	for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();)
 	{
@@ -80,24 +100,24 @@ bool MainPROC::RunProc()
 	}
 	UNLOCK_CS(&csUDstData);
 
-	//´¦ÀíÊı¾İµÄ×ª·¢
+	//å¤„ç†æ•°æ®çš„è½¬å‘
 	LOCK_CS(&csTrans);
 	LOCK_CS(&csUDstData);
 	for(itTrans=lstTransData.begin(); itTrans!=lstTransData.end();)
 	{
 			DEBUG_PRINTF("lstTransData process flag=%s, len=%d, sign count=%d",
 					itTrans->flag_string,itTrans->hexlen,lstUDstData.size());
-			//×ª·¢
+			//è½¬å‘
 			for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
 			{
-				//ÅĞ¶ÏÊÇ·ñÒÑ¾­¶©ÔÄ´ËÏûÏ¢
+				//åˆ¤æ–­æ˜¯å¦å·²ç»è®¢é˜…æ­¤æ¶ˆæ¯
 				if(0==strcmp(itUDst->flag_string,"all") || 
 					0==strcmp(itUDst->flag_string,itTrans->flag_string))
 				{
 					_udpMagr.sendto(itUDst->ipv4,itUDst->port,itTrans->hexbuf,itTrans->hexlen);
 				}
 			}
-			//ÒÆ³ı
+			//ç§»é™¤
 			itTrans=lstTransData.erase(itTrans);
 	}
 	UNLOCK_CS(&csUDstData);
@@ -117,7 +137,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 {
 	data[len]=0x00;
 	
-	//Çø·ÖĞÅÏ¢´æÈëµÄÁ´±í--
+	//åŒºåˆ†ä¿¡æ¯å­˜å…¥çš„é“¾è¡¨--
 	if(len>5)
 	{
 			if(0==memcmp(data,"SIGN,",5) && 0x00!=(data+5))
@@ -132,7 +152,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 							{
 								//
 								LOCK_CS(&csUDstData);
-								//ÅĞ¶Ï¼ÇÂ¼ÊÇ·ñÒÑ¾­´æÔÚ
+								//åˆ¤æ–­è®°å½•æ˜¯å¦å·²ç»å­˜åœ¨
 								for(itStr=strAry.begin();itStr!=strAry.end(); itStr++)
 								{
 									BOOL isNew=TRUE;
@@ -143,7 +163,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 									{
 										for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
 										{
-											//ÅĞ¶ÏÊÇ·ñÒÑ¾­¶©ÔÄ´ËÏûÏ¢
+											//åˆ¤æ–­æ˜¯å¦å·²ç»è®¢é˜…æ­¤æ¶ˆæ¯
 											if( itUDst->port==port &&
 												0==strcmp(itUDst->ipv4,ip) &&
 												0==strcmp(itUDst->flag_string,sfbuf))
@@ -157,7 +177,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 															
 										if(isNew)
 										{
-											//ĞÂÔö½«Êı¾İµ½´ïµÄÎ»ÖÃĞÅÏ¢
+											//æ–°å¢å°†æ•°æ®åˆ°è¾¾çš„ä½ç½®ä¿¡æ¯
 											TagUserDstData usda;
 											strncpy(usda.flag_string,sfbuf,94);
 											strncpy(usda.ipv4,ip,18);

@@ -2,7 +2,7 @@
 message(^^^^^^  开始编译咯...  ^^^^^^^)
 
 #设置工程名称
-PROJECT(udp_cahce)
+PROJECT(udpcache-serv)
 
 #设置CMAKE最小版本
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -38,13 +38,13 @@ set(CMAKE_BUILD_TYPE "Release")
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     set(ADD_DEFAULT "-g -Wall -Wno-unused-variable -pthread")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD_DEFAULT}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_DEFAULT} -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_DEFAULT}")
 
 else( CMAKE_BUILD_TYPE STREQUAL "Debug" )  
     set(CMAKE_BUILD_TYPE "Release")
     set(ADD_DEFAULT "-O1 -pthread")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD_DEFAULT}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_DEFAULT} -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_DEFAULT}")
 
 endif( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 message("Build Type:"${CMAKE_BUILD_TYPE} ${CMAKE_CXX_FLAGS})

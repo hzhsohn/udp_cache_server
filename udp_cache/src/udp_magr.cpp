@@ -20,20 +20,21 @@ BOOL UDP_MAGR::init(int port)
 	zhSockInit(&_udpSocket,ZH_SOCK_UDP);
 	if(zhSockSetReuseAddr(_udpSocket,true))
 	{
-		SYS_PRINTF("udp port : %d",port);
+		SYS_PRINTF("udp bind port : %d",port);
 		if(!zhSockBindAddr(_udpSocket,NULL,port))
 		{
 			return FALSE;
 		}
 	}
 
-	//»º³åÇøÄ¬ÈÏ1M 
+	//ç¼“å†²åŒºé»˜è®¤1M 
 	zhSockSetSendBufferSize(_udpSocket,1024*1024);
     zhSockSetRecvBufferSize(_udpSocket,1024*1024);
 
 	isRuning=TRUE;
 	CREATE_THREAD(&UDP_MAGR::udpThread,this);
-
+	SYS_PRINTF("udp startup ok.",port);
+    return TRUE;
 }
 
 
@@ -44,7 +45,7 @@ void UDP_MAGR::destory()
 }
 
 
-//×èÈûĞÔ½ÓÊÕÊı¾İ
+//é˜»å¡æ€§æ¥æ”¶æ•°æ®
 int UDP_MAGR::blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_in *addr ,int *addrlen)
 {
 	int ret;
