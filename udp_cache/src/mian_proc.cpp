@@ -9,13 +9,15 @@
 
 
 //数据转发源最大链表的接收数量,10万条记录,约占内存190M
-#define MAX_LIST_USRC_DATA_COUNT			200000
+#define MAX_LIST_TRANS_DATA_COUNT			400000
 //数据接收源最大链表的接收数量,1万条记录
 #define MAX_LIST_UDST_DATA_COUNT			200000
 //超时多少秒没激活就被移除接源
 #define MAX_USER_ACTIVE_TIMEOUT				30000
 
-
+//UDP发送的缓存
+char g_udpSendCache[1620];
+int g_udpSendCacheLen;
 
 bool MainPROC::InitProc(int argc,char *argv[])
 {
@@ -114,7 +116,11 @@ bool MainPROC::RunProc()
 				if(0==strcmp(itUDst->flag_string,"all") || 
 					0==strcmp(itUDst->flag_string,itTrans->flag_string))
 				{
-					_udpMagr.sendto(itUDst->ipv4,itUDst->port,itTrans->hexbuf,itTrans->hexlen);
+					snprintf(g_udpSendCache,sizeof(g_udpSendCache),"RECV,%s,\0",itTrans->flag_string);
+					g_udpSendCacheLen=strlen(g_udpSendCache);
+					memcpy(g_udpSendCache+g_udpSendCacheLen,itTrans->hexbuf,itTrans->hexlen);
+					g_udpSendCacheLen+=itTrans->hexlen;
+					_udpMagr.sendto(itUDst->ipv4,itUDst->port,g_udpSendCache,g_udpSendCacheLen);
 				}
 			}
 			//移除
@@ -197,7 +203,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 							DEBUG_PRINTF("lstUDstData too many record");
 					}
 			}
-			else if(0==memcmp(data,"DATA,",5))
+			else if(0==memcmp(data,"SEND,",5))
 			{
 					if(lstTransData.size() < MAX_LIST_UDST_DATA_COUNT)
 					{							
@@ -215,19 +221,26 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 											if(*pbuf)
 											{
 												int pbuflen=len-(strlen(pflag)+6);
-												strncpy(usda.flag_string,pflag,126);
-												memcpy(usda.hexbuf,pbuf,pbuflen);
-												usda.hexlen=pbuflen;
-												lstTransData.push_back(usda);
+												if(pbuflen<sizeof(usda.hexbuf))
+												{
+													strncpy(usda.flag_string,pflag,126);
+													memcpy(usda.hexbuf,pbuf,pbuflen);
+													usda.hexlen=pbuflen;
+													lstTransData.push_back(usda);
+												}
+												else
+												{
+													DEBUG_PRINTF("protocol \"SEND,\" content length too long.max=%d",sizeof(usda.hexbuf)-1);
+												}
 											}
 											else
 											{
-												DEBUG_PRINTF("protocol \"DATA,\" lost content");
+												DEBUG_PRINTF("protocol \"SEND,\" lost content");
 											}
 									}
 									else
 									{
-											DEBUG_PRINTF("protocol \"DATA,\" format error");
+											DEBUG_PRINTF("protocol \"SEND,\" format error");
 									}
 									UNLOCK_CS(&csTrans);
 							}
