@@ -13,7 +13,7 @@ UDP_MAGR::~UDP_MAGR()
 {
 }
 
-void UDP_MAGR::init(int port)
+BOOL UDP_MAGR::init(int port)
 {
 
 	//socket1
@@ -21,7 +21,10 @@ void UDP_MAGR::init(int port)
 	if(zhSockSetReuseAddr(_udpSocket,true))
 	{
 		SYS_PRINTF("udp port : %d",port);
-		zhSockBindAddr(_udpSocket,NULL,port); 
+		if(!zhSockBindAddr(_udpSocket,NULL,port))
+		{
+			return FALSE;
+		}
 	}
 
 	//»º³åÇøÄ¬ÈÏ1M 

@@ -28,6 +28,16 @@ time_t trStrToShortTime(char*szTime);
 char getWeekDay();
 
 
+///////////////////////////////
+//去除字符串空格
+char *ltrim( char *str );    
+
+/**去除右边空格**/
+char *rtrim( char *str);
+
+/**去除两边空格**/
+char *trim(char *str);
+
 #ifdef __cplusplus
 }
 #endif

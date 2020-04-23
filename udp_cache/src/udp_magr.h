@@ -18,7 +18,7 @@ public:
 
 public:
 
-	void init(int port);
+	BOOL init(int port);
 	void destory();
 
 	int blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_in *addr ,int *addrlen);
