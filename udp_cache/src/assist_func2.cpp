@@ -1,4 +1,4 @@
-﻿#include "assist_func2.h"
+#include "assist_func2.h"
 
 
 //s为待分割串，按照delim中的各种字符分割，结果保存在ans中
