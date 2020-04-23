@@ -9,9 +9,9 @@
 
 
 //数据转发源最大链表的接收数量,10万条记录,约占内存190M
-#define MAX_LIST_USRC_DATA_COUNT			100000
+#define MAX_LIST_USRC_DATA_COUNT			200000
 //数据接收源最大链表的接收数量,1万条记录
-#define MAX_LIST_UDST_DATA_COUNT			10000
+#define MAX_LIST_UDST_DATA_COUNT			200000
 //超时多少秒没激活就被移除接源
 #define MAX_USER_ACTIVE_TIMEOUT				30000
 
