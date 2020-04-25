@@ -100,11 +100,9 @@ bool MainPROC::RunProc()
 			itUDst++;
 		}
 	}
-	UNLOCK_CS(&csUDstData);
 
 	//处理数据的转发
 	LOCK_CS(&csTrans);
-	LOCK_CS(&csUDstData);
 	for(itTrans=lstTransData.begin(); itTrans!=lstTransData.end();)
 	{
 			DEBUG_PRINTF("lstTransData process flag=%s, len=%d, sign count=%d",
@@ -126,8 +124,9 @@ bool MainPROC::RunProc()
 			//移除
 			itTrans=lstTransData.erase(itTrans);
 	}
-	UNLOCK_CS(&csUDstData);
+
 	UNLOCK_CS(&csTrans);
+	UNLOCK_CS(&csUDstData);
 	return true;
 }
 

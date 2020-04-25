@@ -79,8 +79,8 @@ void UDP_MAGR::udpThread(UDP_MAGR*p)
 		ret=p->blockingRecvfrom(p->_udpSocket,recvbuf,10238,&addr,&addrlen);
 		if(ret>0)
 		{
-			zhSockAddrToPram(&addr,ip,&port);
 			//printf("%s:%d->len=%d\n",ip,port,ret);
+			zhSockAddrToPram(&addr,ip,&port);
 			p->setdelegate.callback_recv_cb(ip,port,recvbuf,ret);
 		}
 	}
