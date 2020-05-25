@@ -21,7 +21,7 @@ struct TagUserDstData
 {
 		char ipv4[20];
 		int port;
-		char flag_string[128]; //标记信息
+		char flag_string[96]; //标记信息
 		time_t activeTime;//激活时间
 
 		TagUserDstData()
@@ -36,9 +36,9 @@ class MainPROC
 {
 	UDP_MAGR _udpMagr;
 	//服务器收到的转发数据
-	vector<TagUserSrcData> lstUSrcData;
-	vector<TagUserSrcData>::iterator itUSrc;
-	TYPE_CS csUSrcData;
+	vector<TagUserSrcData> lstTransData;
+	vector<TagUserSrcData>::iterator itTrans;
+	TYPE_CS csTrans;
 	vector<TagUserDstData> lstUDstData;
 	vector<TagUserDstData>::iterator itUDst;
 	TYPE_CS csUDstData;

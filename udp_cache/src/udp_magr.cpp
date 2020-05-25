@@ -13,24 +13,28 @@ UDP_MAGR::~UDP_MAGR()
 {
 }
 
-void UDP_MAGR::init(int port)
+BOOL UDP_MAGR::init(int port)
 {
 
 	//socket1
 	zhSockInit(&_udpSocket,ZH_SOCK_UDP);
 	if(zhSockSetReuseAddr(_udpSocket,true))
 	{
-		SYS_PRINTF("udp port : %d",port);
-		zhSockBindAddr(_udpSocket,NULL,port); 
+		SYS_PRINTF("udp bind port : %d",port);
+		if(!zhSockBindAddr(_udpSocket,NULL,port))
+		{
+			return FALSE;
+		}
 	}
 
-	//»º³åÇøÄ¬ÈÏ1M 
+	//ç¼“å†²åŒºé»˜è®¤1M 
 	zhSockSetSendBufferSize(_udpSocket,1024*1024);
     zhSockSetRecvBufferSize(_udpSocket,1024*1024);
 
 	isRuning=TRUE;
 	CREATE_THREAD(&UDP_MAGR::udpThread,this);
-
+	SYS_PRINTF("udp startup ok.",port);
+    return TRUE;
 }
 
 
@@ -41,7 +45,7 @@ void UDP_MAGR::destory()
 }
 
 
-//×èÈûÐÔ½ÓÊÕÊý¾Ý
+//é˜»å¡žæ€§æŽ¥æ”¶æ•°æ®
 int UDP_MAGR::blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_in *addr ,int *addrlen)
 {
 	int ret;
@@ -59,7 +63,7 @@ int UDP_MAGR::blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_
 	return ret;
 }
 
-void UDP_MAGR::udpThread(UDP_MAGR*p)
+void UDP_MAGR::udpThread(PVOID pp)
 {
 	int ret;
 	char* recvbuf;
@@ -69,14 +73,14 @@ void UDP_MAGR::udpThread(UDP_MAGR*p)
 	unsigned short port;
 	recvbuf=(char*)malloc(10240);
 	memset(recvbuf,0,10240);
-
+	UDP_MAGR*p=(UDP_MAGR*)pp;
 	while(p->isRuning)
 	{
 		ret=p->blockingRecvfrom(p->_udpSocket,recvbuf,10238,&addr,&addrlen);
 		if(ret>0)
 		{
-			zhSockAddrToPram(&addr,ip,&port);
 			//printf("%s:%d->len=%d\n",ip,port,ret);
+			zhSockAddrToPram(&addr,ip,&port);
 			p->setdelegate.callback_recv_cb(ip,port,recvbuf,ret);
 		}
 	}

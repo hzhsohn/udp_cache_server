@@ -56,6 +56,7 @@ extern "C"{
 
 #ifdef _WIN32
 	#include <windows.h>
+	#include <process.h>
 	#undef _countof
 	#define _countof(array) (sizeof(array)/sizeof(array[0]))
 	#define VSNPRINTF(a,b,c,d) _vsnprintf(a,b,c,d)
@@ -64,7 +65,10 @@ extern "C"{
 
 	/* thread operate*/
 	#ifndef _zh_thread_type
-		#define CREATE_THREAD(func,arg)		CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)func,(LPVOID)arg,0,NULL)
+		//CreateThread旧了要扔了
+	    //#define CREATE_THREAD(func,arg)	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)func,(LPVOID)arg,0,NULL)
+		#define CREATE_THREAD_EX(func,arg)	_beginthreadex(   NULL,   0,   func,   (PVOID)arg,   0,   NULL   )
+		#define CREATE_THREAD(func,arg)		_beginthread(   func,0,   (PVOID)arg )
 		#define CREATE_THREAD_RET(ret)		((ret)==0)
 		#define _zh_thread_type
 	#endif
@@ -96,6 +100,7 @@ extern "C"{
 		extern pthread_t _pthreadid;
 		#define CREATE_THREAD(func,arg)		pthread_create(&_pthreadid,NULL,(void *(*)(void *))func,(void*)arg)
 		#define CREATE_THREAD_RET(ret)		((ret)!=0)
+		#define PVOID							void*
 		#define _zh_thread_type
 	#endif
 

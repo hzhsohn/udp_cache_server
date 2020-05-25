@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "session.h"
 #include "udp_magr_delegate.h"
+#include "micro.h"
 
 class MainPROC;
 class UDP_MAGR
@@ -18,11 +19,11 @@ public:
 
 public:
 
-	void init(int port);
+	BOOL init(int port);
 	void destory();
 
 	int blockingRecvfrom(SOCKET s,char *buf, int buf_len, struct sockaddr_in *addr ,int *addrlen);
-	static void udpThread(UDP_MAGR*p);
+	static void udpThread(PVOID pp);
 
 	int sendto(char* ipv4, int port ,char* buf,int len);
 };

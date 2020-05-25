@@ -29,7 +29,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v110_xp</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -192,6 +192,7 @@
     <ClCompile Include="lib\zhNet_Core\socket.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\assist_func.c" />
+    <ClCompile Include="src\assist_func2.cpp" />
     <ClCompile Include="src\ck_assist.c" />
     <ClCompile Include="src\mian_proc.cpp" />
     <ClCompile Include="src\udp_magr.cpp" />
@@ -213,6 +214,7 @@
     <ClInclude Include="lib\zhNet_Core\session.h" />
     <ClInclude Include="lib\zhNet_Core\socket.h" />
     <ClInclude Include="src\assist_func.h" />
+    <ClInclude Include="src\assist_func2.h" />
     <ClInclude Include="src\ck_assist.h" />
     <ClInclude Include="src\main_proc.h" />
     <ClInclude Include="src\udp_magr.h" />

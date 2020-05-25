@@ -3,24 +3,29 @@
 #include "ck_assist.h"
 #include "json/cJSON.h"
 #include "udp_magr.h"
+#include "assist_func.h"
+#include "assist_func2.h"
 
-//Êı¾İ×ª·¢Ô´×î´óÁ´±íµÄ½ÓÊÕÊıÁ¿,10ÍòÌõ¼ÇÂ¼,Ô¼Õ¼ÄÚ´æ190M
-#define MAX_LIST_USRC_DATA_COUNT			100000
-//Êı¾İ½ÓÊÕÔ´×î´óÁ´±íµÄ½ÓÊÕÊıÁ¿,1ÍòÌõ¼ÇÂ¼
-#define MAX_LIST_UDST_DATA_COUNT			10000
-//³¬Ê±¶àÉÙÃëÃ»¼¤»î¾Í±»ÒÆ³ı½ÓÔ´
+
+
+//æ•°æ®è½¬å‘æºæœ€å¤§é“¾è¡¨çš„æ¥æ”¶æ•°é‡,10ä¸‡æ¡è®°å½•,çº¦å å†…å­˜190M
+#define MAX_LIST_TRANS_DATA_COUNT			400000
+//æ•°æ®æ¥æ”¶æºæœ€å¤§é“¾è¡¨çš„æ¥æ”¶æ•°é‡,1ä¸‡æ¡è®°å½•
+#define MAX_LIST_UDST_DATA_COUNT			200000
+//è¶…æ—¶å¤šå°‘ç§’æ²¡æ¿€æ´»å°±è¢«ç§»é™¤æ¥æº
 #define MAX_USER_ACTIVE_TIMEOUT				30000
+
+//UDPå‘é€çš„ç¼“å­˜
+char g_udpSendCache[1620];
+int g_udpSendCacheLen;
 
 bool MainPROC::InitProc(int argc,char *argv[])
 {
 	int isSetWorkPath=0;
 	int iParam=0;
+	int nBindPort=6699;
 
-	//--------------------------------------------------------------------------
-	PrintDebugMsgEnable(true);
-	//--------------------------------------------------------------------------
-
-	//»ñÈ¡ÊÇ·ñÎªÏîÄ¿µ÷ÊÔÄ£Ê½µÄ²ÎÊı
+	//è·å–æ˜¯å¦ä¸ºé¡¹ç›®è°ƒè¯•æ¨¡å¼çš„å‚æ•°
 	for (iParam=0; iParam < argc; iParam++)
 	{
         printf("Argument %d is %s\n", iParam, argv[iParam]);
@@ -36,144 +41,220 @@ bool MainPROC::InitProc(int argc,char *argv[])
 
 			exit(0);
 		}
+		else if(0==strcmp(argv[iParam],"-debug"))
+		{
+			//æ‰“å¼€è°ƒè¯•ä¿¡æ¯
+			PrintDebugMsgEnable(true);
+		}
+		else if(0==strcmp(argv[iParam],"-port"))
+		{
+			if(iParam<argc-1)
+			{
+				int np=atoi(argv[iParam+1]);
+				if(np>0)
+				{
+					nBindPort=np;
+				}
+                else
+                {
+                   SYS_PRINTF("parameter -port error value=%s",argv[iParam+1]);
+                }
+			}
+			else
+			{
+                SYS_PRINTF("parameter -port no value");
+            }
+		}
 	}
 
-	//³õÊ¼»¯
-	INIT_CS(&csUSrcData);
+	//åˆå§‹åŒ–
+	INIT_CS(&csTrans);
 	INIT_CS(&csUDstData);
 	_udpMagr.setdelegate.set_recv_cb(this,&MainPROC::udp_recvf);
-	_udpMagr.init(6699);
-
-	SYS_PRINTF("Load successfully");
+	if(_udpMagr.init(nBindPort))
+	{
+		SYS_PRINTF("Load successfully");
+	}
+	else
+	{
+		SYS_PRINTF("Service startup fail.");
+	}
 	return true;
 }
 
 bool MainPROC::RunProc()
 {
 	zhPlatSleep(1);
-	//´¦Àí¹ıÆÚµÄÄ¿±êÔ´
+	//å¤„ç†è¿‡æœŸçš„ç›®æ ‡æº
 	LOCK_CS(&csUDstData);
 	for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();)
 	{
 		time_t tmpT=zhPlatGetTime();
 		if(tmpT - itUDst->activeTime > MAX_USER_ACTIVE_TIMEOUT)
 		{
-				itUDst=lstUDstData.erase(itUDst);
+			DEBUG_PRINTF("lstUDstData remove ip=%s, port=%d,sign_flag=%s",itUDst->ipv4,itUDst->port,itUDst->flag_string);
+			itUDst=lstUDstData.erase(itUDst);
 		}
 		else
 		{
-				itUDst++;
+			itUDst++;
 		}
 	}
-	UNLOCK_CS(&csUDstData);
 
-	//´¦ÀíÊı¾İµÄ×ª·¢
-	LOCK_CS(&csUSrcData);
-	LOCK_CS(&csUDstData);
-	for(itUSrc=lstUSrcData.begin(); itUSrc!=lstUSrcData.end();)
+	//å¤„ç†æ•°æ®çš„è½¬å‘
+	LOCK_CS(&csTrans);
+	for(itTrans=lstTransData.begin(); itTrans!=lstTransData.end();)
 	{
-			//×ª·¢
+			DEBUG_PRINTF("lstTransData process flag=%s, len=%d, sign count=%d",
+					itTrans->flag_string,itTrans->hexlen,lstUDstData.size());
+			//è½¬å‘
 			for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
 			{
-				//ÅĞ¶ÏÊÇ·ñÒÑ¾­¶©ÔÄ´ËÏûÏ¢
+				//åˆ¤æ–­æ˜¯å¦å·²ç»è®¢é˜…æ­¤æ¶ˆæ¯
 				if(0==strcmp(itUDst->flag_string,"all") || 
-					0==strcmp(itUDst->flag_string,itUSrc->flag_string))
+					0==strcmp(itUDst->flag_string,itTrans->flag_string))
 				{
-					_udpMagr.sendto(itUDst->ipv4,itUDst->port,itUSrc->hexbuf,itUSrc->hexlen);
+					snprintf(g_udpSendCache,sizeof(g_udpSendCache),"RECV,%s,\0",itTrans->flag_string);
+					g_udpSendCacheLen=strlen(g_udpSendCache);
+					memcpy(g_udpSendCache+g_udpSendCacheLen,itTrans->hexbuf,itTrans->hexlen);
+					g_udpSendCacheLen+=itTrans->hexlen;
+					_udpMagr.sendto(itUDst->ipv4,itUDst->port,g_udpSendCache,g_udpSendCacheLen);
 				}
 			}
-			//ÒÆ³ı
-			itUSrc=lstUSrcData.erase(itUSrc);
+			//ç§»é™¤
+			itTrans=lstTransData.erase(itTrans);
 	}
+
+	UNLOCK_CS(&csTrans);
 	UNLOCK_CS(&csUDstData);
-	UNLOCK_CS(&csUSrcData);
 	return true;
 }
 
 void MainPROC::EndProc()
 {
 	_udpMagr.destory();
-	DELETE_CS(&csUSrcData);
+	DELETE_CS(&csTrans);
 	DELETE_CS(&csUDstData);
 }
 
 //--------------------------------------------------
 void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 {
-	DEBUG_PRINTF("udp_recvf ip=%s, port=%d,int len=%d)",ip,port,len);
-	
 	data[len]=0x00;
-	//Çø·ÖĞÅÏ¢´æÈëµÄÁ´±í--
-	if(len>6)
+	
+	//åŒºåˆ†ä¿¡æ¯å­˜å…¥çš„é“¾è¡¨--
+	if(len>5)
 	{
-			if(0==memcpy(data,"SIGN,",5))
+			if(0==memcmp(data,"SIGN,",5) && 0x00!=(data+5))
 			{
-						if(0x00!=(data+6))
-						{
-									if(lstUDstData.size() < MAX_LIST_UDST_DATA_COUNT)
-									{
-												LOCK_CS(&csUDstData);
-												//ÅĞ¶Ï¼ÇÂ¼ÊÇ·ñÒÑ¾­´æÔÚ
-												for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
-												{
-															//ÅĞ¶ÏÊÇ·ñÒÑ¾­¶©ÔÄ´ËÏûÏ¢
-															if(0==strcmp(itUDst->flag_string,"all") || 
-																0==strcmp(itUDst->flag_string,itUSrc->flag_string))
-															{
-																	itUDst->activeTime=zhPlatGetTime();
-																	break;
-															}
-												}
-
-												//ĞÂÔö½«Êı¾İµ½´ïµÄÎ»ÖÃĞÅÏ¢
-												TagUserDstData usda;
-												strncpy(usda.flag_string,data+6,126);
-												strncpy(usda.ipv4,ip,18);
-												usda.port=port;
-												usda.activeTime=zhPlatGetTime();
-												lstUDstData.push_back(usda);
-												UNLOCK_CS(&csUDstData);
-									}
-									else
-									{
-											DEBUG_PRINTF("lstUDstData too many record");
-									}
-						}
-			}
-			else if(0==memcpy(data,"DATA,",5))
-			{
-					if(lstUSrcData.size() < MAX_LIST_UDST_DATA_COUNT)
+					if(lstUDstData.size() < MAX_LIST_UDST_DATA_COUNT)
 					{
-							if(0x00!=(data+6))
+							char* pdataStr=data+5;
+							vector<string> strAry;
+							vector<string>::iterator itStr;
+							stringSplit(pdataStr,"/",strAry);
+							if(strAry.size()>0)
 							{
-									LOCK_CS(&csUSrcData);
+								//
+								LOCK_CS(&csUDstData);
+								//åˆ¤æ–­è®°å½•æ˜¯å¦å·²ç»å­˜åœ¨
+								for(itStr=strAry.begin();itStr!=strAry.end(); itStr++)
+								{
+									BOOL isNew=TRUE;
+									char sfbuf[300]={0};
+									strncpy(sfbuf,itStr->c_str(),298);
+									trim(sfbuf);
+									if(0x00!=sfbuf[0])
+									{
+										for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();itUDst++)
+										{
+											//åˆ¤æ–­æ˜¯å¦å·²ç»è®¢é˜…æ­¤æ¶ˆæ¯
+											if( itUDst->port==port &&
+												0==strcmp(itUDst->ipv4,ip) &&
+												0==strcmp(itUDst->flag_string,sfbuf))
+											{
+													itUDst->activeTime=zhPlatGetTime();
+													isNew=FALSE;
+													DEBUG_PRINTF("sign \"%s\" active time",sfbuf);
+													break;
+											}
+										}
+															
+										if(isNew)
+										{
+											//æ–°å¢å°†æ•°æ®åˆ°è¾¾çš„ä½ç½®ä¿¡æ¯
+											TagUserDstData usda;
+											strncpy(usda.flag_string,sfbuf,94);
+											strncpy(usda.ipv4,ip,18);
+											usda.port=port;
+											usda.activeTime=zhPlatGetTime();
+											lstUDstData.push_back(usda);
+											DEBUG_PRINTF("sign add \"%s\" , lstUDstData.count=%d",sfbuf,lstUDstData.size());
+										}
+									}
+								}
+													
+								UNLOCK_CS(&csUDstData);
+							}
+					}
+					else
+					{
+							DEBUG_PRINTF("lstUDstData too many record");
+					}
+			}
+			else if(0==memcmp(data,"SEND,",5))
+			{
+					if(lstTransData.size() < MAX_LIST_UDST_DATA_COUNT)
+					{							
+							char* pdataStr=data+5;
+							if(0x00!=pdataStr)
+							{
+									LOCK_CS(&csTrans);
 									TagUserSrcData usda;
-									char *pflag=data+6;
-									int pbuflen=len-strlen(pflag)+6;
+									char *pflag=pdataStr;
 									char*pbuf=strchr(pflag,',');
 									if(pbuf)
 									{
 											*pbuf=0x00;
 											pbuf++;
-											strncpy(usda.flag_string,pflag,126);
-											memcpy(usda.hexbuf,pbuf,pbuflen);
-											lstUSrcData.push_back(usda);
-											UNLOCK_CS(&csUSrcData);
+											if(*pbuf)
+											{
+												int pbuflen=len-(strlen(pflag)+6);
+												if(pbuflen<sizeof(usda.hexbuf))
+												{
+													strncpy(usda.flag_string,pflag,126);
+													memcpy(usda.hexbuf,pbuf,pbuflen);
+													usda.hexlen=pbuflen;
+													lstTransData.push_back(usda);
+												}
+												else
+												{
+													DEBUG_PRINTF("protocol \"SEND,\" content length too long.max=%d",sizeof(usda.hexbuf)-1);
+												}
+											}
+											else
+											{
+												DEBUG_PRINTF("protocol \"SEND,\" lost content");
+											}
 									}
 									else
 									{
-											DEBUG_PRINTF("protocol \"DATA:\" format error");
+											DEBUG_PRINTF("protocol \"SEND,\" format error");
 									}
+									UNLOCK_CS(&csTrans);
 							}
 					}
 					else
 					{
-							DEBUG_PRINTF("lstUSrcData too many record");
+							DEBUG_PRINTF("lstTransData too many record");
 					}
 			}
 			else
 			{
+					DEBUG_PRINTF("-----------------------------------------------");
 					DEBUG_PRINTF("unknow protocol format");
+					DEBUG_PRINTF("ip=%s, port=%d,len=%d,data=%s",ip,port,len,data);
+					DEBUG_PRINTF("-----------------------------------------------");
 			}
 	}
 	else

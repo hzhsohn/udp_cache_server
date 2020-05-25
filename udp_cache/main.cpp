@@ -9,9 +9,6 @@ MainPROC g_main;
 int main(int argc,char *argv[])
 {
 	int i=0;
- 	//初始化日志
-	PrintMsgInit();
-
 	//开始程序
 	if(g_main.InitProc(argc,argv))
 	{

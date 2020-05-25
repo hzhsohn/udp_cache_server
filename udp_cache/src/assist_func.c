@@ -151,20 +151,55 @@ char getWeekDay()
 	return ptm.tm_wday;
 }
 
-char trStrToBool(const char *szValue)
+
+
+
+///////////////////////////////
+//去除字符串空格
+char *ltrim( char *str ) 
 {
-	if(!strcmpi(szValue,"0"))
-	{	return 0;}
-	else if(!strcmpi(szValue,"1"))
-	{	return 1;}
-	else if(!strcmpi(szValue,"false"))
-	{	return 0;}
-	else if(!strcmpi(szValue,"true"))
-	{	return 1;}
-	else
-	{	return 0;}
+    /**去除左边空格**/
+    int length = (int)strlen( str );
+    char *i;
+    char *len;
+    int m = 0;
+    int n = 0;
+    i = str;
+    len = str + length;
+    
+    for (; i<len; i++ ) {
+        if ( *i == ' ' || *i == '\t' || *i == '\n' ) {
+            n ++;
+        } else {
+            break;
+        }
+    }
+    for ( m=0; m<=length-n; m++ ) {
+        *(str + m) = *(str + n + m);
+    }
+    return str;
+}        
+
+/**去除右边空格**/
+char *rtrim( char *str) 
+{
+    char *i;
+    i = str + strlen( str ) - 1;
+    
+    for (; i>=str; i-- ) {
+        if ( *i == ' ' || *i == '\t' || *i == '\n' ) {
+            *(str + strlen(str) -1) = '\0';
+        } else {
+            break;
+        }
+    }
+    return str;                                                                                                                            
 }
-char* trBoolToStr(char c)
+
+/**去除两边空格**/
+char *trim(char *str)
 {
-	 return c?"true":"false";
+    ltrim(str);
+    rtrim(str);
+    return str;
 }
