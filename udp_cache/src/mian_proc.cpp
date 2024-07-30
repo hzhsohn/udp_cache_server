@@ -16,7 +16,7 @@
 //UDP发送的缓存
 char g_udpSendCache[1620];
 int g_udpSendCacheLen;
-int g_nKeepTime = 30;
+int g_nKeepTime = 30000;
 
 bool MainPROC::InitProc(int argc,char *argv[])
 {
