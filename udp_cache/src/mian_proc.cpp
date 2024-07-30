@@ -12,12 +12,11 @@
 #define MAX_LIST_TRANS_DATA_COUNT			400000
 //数据接收源最大链表的接收数量,1万条记录
 #define MAX_LIST_UDST_DATA_COUNT			200000
-//超时多少秒没激活就被移除接源
-#define MAX_USER_ACTIVE_TIMEOUT				30000
 
 //UDP发送的缓存
 char g_udpSendCache[1620];
 int g_udpSendCacheLen;
+int g_nKeepTime = 30;
 
 bool MainPROC::InitProc(int argc,char *argv[])
 {
@@ -58,14 +57,40 @@ bool MainPROC::InitProc(int argc,char *argv[])
                 else
                 {
                    SYS_PRINTF("parameter -port error value=%s",argv[iParam+1]);
+				   exit(0);
                 }
 			}
 			else
 			{
                 SYS_PRINTF("parameter -port no value");
+				exit(0);
             }
 		}
+		else if (0 == strcmp(argv[iParam], "-keeptime"))
+		{
+			if (iParam < argc - 1)
+			{
+				int np = atoi(argv[iParam + 1]);
+				if (np > 0)
+				{
+					g_nKeepTime = np;
+					g_nKeepTime = g_nKeepTime * 1000;
+				}
+				else
+				{
+					SYS_PRINTF("parameter -keeptime error value=%s", argv[iParam + 1]);
+					exit(0);
+				}
+			}
+			else
+			{
+				SYS_PRINTF("parameter -keeptime no value");
+				exit(0);
+			}
+		}
 	}
+
+	SYS_PRINTF("user keeptime value=%d seconds", g_nKeepTime/1000);
 
 	//初始化
 	INIT_CS(&csTrans);
@@ -90,7 +115,7 @@ bool MainPROC::RunProc()
 	for(itUDst=lstUDstData.begin(); itUDst!=lstUDstData.end();)
 	{
 		time_t tmpT=zhPlatGetTime();
-		if(tmpT - itUDst->activeTime > MAX_USER_ACTIVE_TIMEOUT)
+		if(tmpT - itUDst->activeTime > g_nKeepTime)
 		{
 			DEBUG_PRINTF("lstUDstData remove ip=%s, port=%d,sign_flag=%s",itUDst->ipv4,itUDst->port,itUDst->flag_string);
 			itUDst=lstUDstData.erase(itUDst);
@@ -176,6 +201,7 @@ void MainPROC::udp_recvf(char*ip,int port,char* data,int len)
 													itUDst->activeTime=zhPlatGetTime();
 													isNew=FALSE;
 													DEBUG_PRINTF("sign \"%s\" active time",sfbuf);
+													_udpMagr.sendto(ip, port, "SIGNOK", 6);
 													break;
 											}
 										}

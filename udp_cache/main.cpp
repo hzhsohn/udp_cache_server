@@ -8,7 +8,8 @@ MainPROC g_main;
 
 int main(int argc,char *argv[])
 {
-	int i=0;
+	printf("VERSION: v1.1\n");
+
 	//开始程序
 	if(g_main.InitProc(argc,argv))
 	{
